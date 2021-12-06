@@ -9,6 +9,15 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function generateRandomString() {
+    let char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let string = '';
+    for (let i = 0; i < 6; i++) {
+        string += char.charAt(Math.floor(Math.random() * char.length));
+    }
+    return string;
+}
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
