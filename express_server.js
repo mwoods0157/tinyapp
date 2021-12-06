@@ -57,6 +57,11 @@ app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = req.body.longURL;
+  res.redirect(longURL);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -65,7 +70,7 @@ app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  res.render("/urls/shortURL");         // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
 
 //http://localhost:8080/set
