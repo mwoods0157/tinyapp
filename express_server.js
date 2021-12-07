@@ -97,5 +97,11 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
 
+const templateVars = {
+    username: req.cookies["username"],
+    // ... any other vars
+};
+res.render("urls_index", templateVars);
+
 //http://localhost:8080/set
 //http://localhost:8080/fetch
