@@ -66,6 +66,11 @@ app.post("/urls/:shortURL", (req, res) => {
     res.redirect('/urls');
 });
 
+app.post("/login", (req, res) => {
+    res.cookie('username', req.body.username);
+    res.redirect('/urls');
+})
+
 //Can variables ('a') be seen in other 'get'
 app.get("/set", (req, res) => {
   const a = 1;
