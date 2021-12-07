@@ -47,6 +47,25 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+//Post route that removes URL resource
+app.post("/urls/:shortURL/delete", (req, res) => {
+    const shortURLToRemove = req.params.shortURL;
+    delete urlDatabase[shortURLToRemove];
+    res.redirect("/urls");
+});
+
+app.post("/urls/:shortURL/edit", (req, res) => {
+    const shortURLToEdit = req.params.shortURL;
+    res.redirect(`/urls/${shortURLToEdit}`);
+});
+
+app.post("/urls/:shortURL", (req, res) => {
+    const shortURLToEdit = req.params.shortURL;
+    const newLongURL = req.body.lname;
+    urlDatabase[shortURLToEdit] = newLongURL;
+    res.redirect('/urls');
+});
+
 //Can variables ('a') be seen in other 'get'
 app.get("/set", (req, res) => {
   const a = 1;
