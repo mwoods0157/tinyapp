@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+const bcrypt = require("bcryptjs");
 var cookies = require("cookie-parser");
 app.use(cookies());
 
@@ -26,7 +27,7 @@ const users = {
     "aJ48lW": {
       id: "aJ48lW", 
       email: "user@example.com", 
-      password: "abcd"
+      password: bcrypt.hashSync("abcd", 8) //"abcd"
     },
    "user2RandomID": {
       id: "user2RandomID", 
@@ -77,7 +78,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 
 
-
 //All server post requests
 //Post route that removes URL resource
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -109,13 +109,14 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
     const user = findUserByEmail(req.body.email);
+    const password = bcrypt.hashSync(req.body.password, 8); //req.body.password
     //console.log('user', user);
-    const password = req.body.password;
+    //const password = req.body.password;
     
     if (user === null) {
         return res.status(403).send('Can not find a user with that email.');
     }; 
-    if (password !== user.password){
+    if (bcrypt.compareSync(password, user.password)){ //(password !== user.password)
         return res.status(403).send('Password does not match recorded password.');
     }; 
     res.cookie('user_id', user.id);
@@ -136,7 +137,9 @@ app.post("/urls", (req, res) => {
 app.post("/register", (req, res) => {
     const newId = generateRandomString();
     const newEmail = req.body.email;
-    const newPassword = req.body.password;
+    const newPassword = bcrypt.hashSync(req.body.password, 8);
+    //const newPassword = req.body.password;
+    //console.log('req.body', req.body);
     
     if (!newEmail || !newPassword) {
         return res.status(400).send('Must have both password and email');
