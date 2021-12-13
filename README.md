@@ -6,7 +6,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 !["Register screen"](https://user-images.githubusercontent.com/38844101/145905811-8825d76a-fe69-4a2c-b3f8-7edc7741fbbe.png)   
 
-!["Main page"](#)
+!["Main page"](https://user-images.githubusercontent.com/38844101/145905940-94ce1f25-2ac9-4e43-b65e-fa7333db9b66.png)
 
 ## Dependencies
 
