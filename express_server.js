@@ -27,7 +27,7 @@ const users = {
     "aJ48lW": {
       id: "aJ48lW", 
       email: "user@example.com", 
-      password: bcrypt.hashSync("abcd", 8) //"abcd"
+      password: "abcd" //"abcd"
     },
    "user2RandomID": {
       id: "user2RandomID", 
@@ -100,12 +100,13 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
     const user = helper.findUserByEmail(req.body.email, users);
-    const password = bcrypt.hashSync(req.body.password, 8); //req.body.password
+    const password = req.body.password; //req.body.password
+    const hash = bcrypt.hashSync(user.password, 8)
     
-    if (user === null) {
+    if (!user) {
         return res.status(403).send('Can not find a user with that email.');
     }; 
-    if (bcrypt.compareSync(password, user.password)){ //(password !== user.password)
+    if (!bcrypt.compareSync(password, hash)){ //(password !== user.password)
         return res.status(403).send('Password does not match recorded password.');
     }; 
     req.session.id = user.id;
@@ -120,7 +121,11 @@ app.post('/logout', (req, res) => {
 
 app.post("/urls", (req, res) => {
     let shortURL = generateRandomString();
-    urlDatabase[shortURL].longURL = req.body.longURL;
+    
+    urlDatabase[shortURL] = {
+        longURL: req.body.longURL,
+        userID: req.session.id
+    };
     res.redirect('/urls');         //string template iteral ${shortURL}
 });
 
@@ -148,6 +153,8 @@ app.post("/register", (req, res) => {
     res.redirect('/urls');
 });
 
+
+
 //All server get requests
 //Added displaying the username
 app.get("/urls", (req, res) => {
@@ -156,9 +163,9 @@ app.get("/urls", (req, res) => {
     }
     const newDB = urlsForUser(req.session.id);
     const userId = req.session.id; //req.session['user_id'];
-    console.log('userId', userId);
+    
     const user = users[userId];
-    console.log('user', user);
+    
     const templateVars = { 
         urls: newDB, //Needs to be changed. Was urlDatabase, now newDB (only urls with the user_id)
         user: user //changed from username to user
@@ -188,7 +195,7 @@ app.get("/urls/new", (req, res) => {
         user: user 
     }
     if(!userId) {
-        return res.redirect('/urls');
+        return res.redirect('/login');
     }
     res.render("urls_new", templateVars);
 });
@@ -210,8 +217,7 @@ app.get("/urls/:shortURL", (req, res) => {
       longURL: urlDatabase[req.params.shortURL].longURL,  
       user: users['user_id'] 
     }; 
-    console.log(templateVars.longURL);
-    console.log(templateVars.shortURL);
+    
     res.render("urls_show", templateVars);
 });
 
@@ -221,7 +227,12 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-    res.send("Hello!");
+    if(!users[req.session.userID]) {
+        res.redirect('/login');
+        return;
+    }
+    res.redirect('/urls');
+    return;
   });
   
 app.get("/urls.json", (req, res) => {
