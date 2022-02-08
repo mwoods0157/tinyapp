@@ -27,7 +27,7 @@ const users = {
     "aJ48lW": {
       id: "aJ48lW", 
       email: "user@example.com", 
-      password: "abcd" //"abcd"
+      password: "abcd" 
     },
    "user2RandomID": {
       id: "user2RandomID", 
@@ -72,86 +72,88 @@ app.use(bodyParser.urlencoded({extended: true}));
 //All server post requests
 //Post route that removes URL resource
 app.post("/urls/:shortURL/delete", (req, res) => {
-    const userID = req.session.id; //This checks if the cookie has the userID value
-    if (!userID) { //If the user is not logged in, they shouldnt be able to delete
-        return res.status(400).send('You need to log in to have access.');
-    }
+    const userID = req.session.username;
     const shortURLToRemove = req.params.shortURL;
-    delete urlDatabase[shortURLToRemove];
-    res.redirect("/urls");
+
+    if (userID === urlDatabase[shortURLToRemove].userID) { 
+        delete urlDatabase[shortURLToRemove];
+        res.redirect('/urls');
+    } else {
+        return res.status(403).send("You are not the owner of this url. Access denied.");
+    }
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-    
-    const userID = req.session.id; //Gives the user_id from cookie value
-    if (!userID) {
-        return res.status(400).send('You need to log in to have access.');
-    }
+    const newURL = req.body.newURL;
+    const userID = req.session.username; 
     const shortURLToEdit = req.params.shortURL;
-    res.redirect(`/urls/${shortURLToEdit}`);
+
+    if (userID === urlDatabase[shortURLToEdit].userID) {
+        urlDatabase[shortURLToEdit].longURL = newURL;
+        res.redirect('/urls');
+    } else {
+        return res.status(403).send("You are not the owner of this url. Access denied.");
+    }
 });
 
-app.post("/urls/:shortURL", (req, res) => {
-    const shortURLToEdit = req.params.shortURL;
-    const newLongURL = req.body.lname;
-    urlDatabase[shortURLToEdit].longURL = newLongURL;
-    res.redirect('/urls');
-});
 
 app.post("/login", (req, res) => {
     const user = helper.findUserByEmail(req.body.email, users);
-    const password = req.body.password; //req.body.password
-    const hash = bcrypt.hashSync(user.password, 8)
+    const password = req.body.password; 
     
     if (!user) {
-        return res.status(403).send('Can not find a user with that email.');
+        return res.status(400).send('Can not find a user with that email.');
     }; 
-    if (!bcrypt.compareSync(password, hash)){ //(password !== user.password)
-        return res.status(403).send('Password does not match recorded password.');
+    if (!bcrypt.compareSync(password, user.password)){ 
+        return res.status(400).send('Password does not match recorded password.');
     }; 
-    req.session.id = user.id;
+    req.session.username = user.id;
     res.redirect('/urls');       
 });
 
 app.post('/logout', (req, res) => {
-    //res.clearCookie('user_id', req.body.user_id); //Changed w03d03t2
+    
     req.session = null;
-    res.redirect('/urls');
+    res.redirect('/login');
 });
 
-app.post("/urls", (req, res) => {
-    let shortURL = generateRandomString();
-    
-    urlDatabase[shortURL] = {
-        longURL: req.body.longURL,
-        userID: req.session.id
-    };
-    res.redirect('/urls');         //string template iteral ${shortURL}
-});
 
 app.post("/register", (req, res) => {
     const newId = generateRandomString();
     const newEmail = req.body.email;
-    const newPassword = bcrypt.hashSync(req.body.password, 8);
+    const newPassword = req.body.password;
+    
+    const user = helper.findUserByEmail(newEmail, users);
     
     
     if (!newEmail || !newPassword) {
         return res.status(400).send('Must have both password and email');
     };
 
-    if (helper.findUserByEmail(newEmail, users)) {
+    if (user) {
         return res.status(400).send('A user with that email already exists');
     };
 
-    const templateVars = {
-        id: newId,
-        email: newEmail,
-        password: newPassword
+    users[newId] = {
+        "id": newId,
+        "email": newEmail,
+        "password": newPassword
     };
-    users[newId] = templateVars;
-    req.session.id = newId;
+    
+    req.session.username = newId;
     res.redirect('/urls');
 });
+
+app.post("/urls/new", (req, res) => {
+    const shortURL = generateRandomString();
+
+    urlDatabase[shortURL] = {
+        longURL: req.body.longURL,
+        userID: req.session.username
+    };
+
+    res.redirect(`/urls/${shortURL}`);
+})
 
 
 
