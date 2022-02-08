@@ -9,7 +9,12 @@
   <title>TinyApp</title>
 </head>
 <body>
-        <%- include('partials/_header') %>
+  <% if (user) { %>
+    <%- include('partials/_header', {user: user}) %>
+   <% } else { %>
+    <%- include('partials/_header') %>
+   <% } %>
+        
     
   <main style="margin: 1em;">
     <h3>My URLs</h3>
@@ -25,8 +30,8 @@
       <tbody>
         <% for(let url in urls) { %>
           <tr>
-            <td><%= url %></td>
-            <td><%= urls[url].longURL %></td>
+            <td><a href="u/<%= url %>"><%= url %></a></td>
+            <td><a href="u/<%= urls[url].longURL %>"><%= urls[url].longURL %></a></td>
             <td><form method="GET" action="/urls/<%= url %>/"><input type="submit" value="edit"></form></td>
             <td><form method="POST" action="/urls/<%= url %>/delete"><input type="submit" value="delete"></form></td>
           </tr>

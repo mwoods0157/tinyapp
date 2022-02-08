@@ -3,13 +3,17 @@
 <head>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <title>URL - TinyApp Example</title>
+  <title>TinyApp</title>
 </head>
 
 <body>
 
-    
+  <% if (user) { %>
+    <%- include('partials/_header', {user: user}) %>
+  <% } else { %>
     <%- include('partials/_header') %>
+  <% } %>
+    
     
     <div class="card text-center">
     <div class="card-footer text-muted"></div>
@@ -18,10 +22,12 @@
         <div class="card-body">
             <h4 class="card-title">New User:</h4><br>
             <form method="POST" action="/register">
-                <label for="email">Email</label>
+                <label for="email"><b>Email: </b></label>
                 <input type="text" id="id" name="email" value="@"><br>
+
                 <label for="password">Password</label>
                 <input type="text" name="password">
+
                 <input type="submit" value="submit">
             </form>
         </div>
