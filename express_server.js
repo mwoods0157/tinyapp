@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080; 
 const bcrypt = require("bcryptjs");
 var cookieSession = require('cookie-session');
 var helper = require('./helper');
@@ -46,7 +46,7 @@ function generateRandomString() {
 };
 
 const urlsForUser = (id) => {
-    let newURL = {};
+    const newURL = {};
     for (const shortURL in urlDatabase) {
         const user = urlDatabase[shortURL];
         if (user.userID === id) {
@@ -84,7 +84,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-    const newURL = req.body.newURL;
+    const newURL = req.body.lname;
     const userID = req.session.username; 
     const shortURLToEdit = req.params.shortURL;
 
@@ -99,12 +99,15 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 app.post("/login", (req, res) => {
     const user = helper.findUserByEmail(req.body.email, users);
-    const password = req.body.password; 
-    
-    if (!user) {
+
+    if (user === null) {
         return res.status(400).send('Can not find a user with that email.');
     }; 
-    if (!bcrypt.compareSync(password, user.password)){ 
+
+    const password = req.body.password; 
+    const result = bcrypt.hashSync(user.password, 8);
+    
+    if (!bcrypt.compareSync(password, result)){ 
         return res.status(400).send('Password does not match recorded password.');
     }; 
     req.session.username = user.id;
@@ -152,7 +155,7 @@ app.post("/urls/new", (req, res) => {
         userID: req.session.username
     };
 
-    res.redirect(`/urls/${shortURL}`);
+    res.redirect(`/urls/${shortURL}/edit`);
 })
 
 
@@ -161,8 +164,8 @@ app.post("/urls/new", (req, res) => {
 //Added displaying the username
 app.get("/urls", (req, res) => {
     const userID = req.session.username;
-    const user = users[userID]; 
-    const newDB = urlsForUser(userID);
+    const user = users[userID];
+    const newDB = urlsForUser(userID); 
 
     if (!userID) {
         return res.status(400).send('You should log in or register first');
@@ -213,25 +216,40 @@ app.get("/register", (req, res) => {
 });
   
 
-app.get("/urls/:shortURL", (req, res) => {
+app.get("/urls/:shortURL/edit", (req, res) => {
     const userID = req.session.username;
     const user =  users[userID];
+    
     if (!user) {
         return res.status(403).send("You must login first to see your urls.");
     }
 
+    const userURLS = urlsForUser(userID);
+    const shortURL = req.params.shortURL;
+
     const templateVars = { 
-      shortURL: req.params.shortURL, 
-      longURL: urlDatabase[req.params.shortURL].longURL,  
-      user: user
-    }; 
+        shortURL: shortURL, 
+        longURL: urlDatabase[shortURL].longURL,  
+        user: users[userID],
+        userURLS: userURLS
+    };
+    
+    if (!urlDatabase[shortURL]) {
+        return res.status(404).send("That short url can not be found in the database. Are you sure it exists?");
+    }
+
+    if (!userID || !userURLS[shortURL]) {
+        return res.status(403).send("You must login first to see your urls.");
+    }
     
     res.render("urls_show", templateVars);
 });
 
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id].longURL;
-  res.redirect(longURL);
+app.get("/u/:shortURL", (req, res) => {
+    if(urlDatabase[req.params.shortURL]) {
+        res.redirect(urlDatabase[req.params.shortURL].longURL);
+        return;
+    }
 });
 
 app.get("/", (req, res) => {
@@ -242,14 +260,9 @@ app.get("/", (req, res) => {
     res.redirect('/urls');
     return;
 });
-  
-app.get("/urls.json", (req, res) => {
-    const templateVars = { username: req.session.username };
-    res.json(urlDatabase, templateVars);
-});
 
   
-//Listener
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
